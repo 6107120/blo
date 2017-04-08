@@ -30,6 +30,7 @@ using UnityEngine;
 
 			Enemy spawnedEnemy = Instantiate(enemy, Vector3.zero, Quaternion.identity);
 			spawnedEnemy.OnDeath += OnEnemyDeath;
+			
 		}
 	}
 

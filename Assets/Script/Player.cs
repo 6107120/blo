@@ -8,6 +8,7 @@ public class Player : LivingEntity {
 
 
 	public float moveSpeed = 5;
+
 	Camera viewCamera;
 	PlayerController playerController;
 	// Use this for initialization
