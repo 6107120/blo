@@ -20,7 +20,6 @@ public class KSPlayerController : MonoBehaviour {
 	public void Rotation(float rotation) {
 		this.rotation = rotation;
 	}
-
 	public void FixedUpdate() {
 		//rotation
 		Quaternion newRotation = transform.rotation * Quaternion.Euler(0,rotation,0);
