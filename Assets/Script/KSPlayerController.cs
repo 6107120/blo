@@ -14,7 +14,6 @@ public class KSPlayerController : MonoBehaviour {
 		myRigidbody = GetComponent<Rigidbody> ();
 		
 	}
-	
 	public void Move(Vector3 velocity) {
 		this.velocity = velocity;
 	}
