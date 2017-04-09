@@ -43,32 +43,34 @@ public class KSPlayer : MonoBehaviour {
 		//cal ray
 		Ray ray = new Ray(transform.position, transform.forward);
 		RaycastHit hit;
-		Debug.DrawRay(ray.origin, ray.direction, Color.red);
-		Ray upBaseray = new Ray(transform.position - Vector3.up*0.3f, transform.forward);
-		Ray upRay = new Ray(transform.position, transform.up);
+		Debug.DrawRay(ray.origin, ray.direction, Color.gray);
+		Ray upBaseray = new Ray(transform.position - Vector3.up * transform.localScale.x, transform.forward);
 		Ray upForwardRay = new Ray(transform.position + Vector3.up, transform.forward);
-		Ray downRay = new Ray(transform.position, transform.up);
-		Ray downForwardRay = new Ray(transform.position + Vector3.up, transform.forward);
+
+		Ray downRayLeftForward = new Ray(transform.position + Vector3.left/2 + Vector3.forward/2, Vector3.down);
+		Ray downRayLeftBack = new Ray(transform.position + Vector3.left/2 + Vector3.back/2, Vector3.down);
+		Ray downRayRightForward = new Ray(transform.position + Vector3.right/2 + Vector3.forward/2, Vector3.down);
+		Ray downRayRightBack = new Ray(transform.position + Vector3.right/2 + Vector3.back/2, Vector3.down);
+		// Debug.DrawRay(upBaseray.origin, upBaseray.direction, Color.red);
+		// Debug.DrawRay(upRay.origin, upRay.direction, Color.red);
+		// Debug.DrawRay(upForwardRay.origin, upForwardRay.direction, Color.red);
+
+		// Debug.DrawRay(ray.origin, ray.direction, Color.green);
+		// Debug.DrawRay(downForwardRay.origin, downForwardRay.direction, Color.yellow);
+		Debug.DrawRay(downRayLeftForward.origin, downRayLeftForward.direction, Color.yellow);	
 
 		if(Physics.Raycast(upBaseray, 0.5f, layerMask)) {
-			Debug.DrawRay(upBaseray.origin, upBaseray.direction, Color.green);
-			if(Physics.Raycast(upRay, 1f, layerMask) == false) {
-				Debug.DrawRay(upRay.origin, upRay.direction, Color.cyan);
 				if(Physics.Raycast(upForwardRay, 1f, layerMask) == false) {
-					Debug.DrawRay(upForwardRay.origin, upForwardRay.direction, Color.yellow);
 					moveInput = new Vector3(Input.GetAxisRaw("Horizontal"), 1.5f, Input.GetAxisRaw("Vertical"));
 				}
-			}
 		}else
-		if(Physics.Raycast(ray, 0.5f, layerMask) == false) {
-			Debug.DrawRay(ray.origin, ray.direction, Color.green);
-			if(Physics.Raycast(downRay, 1f, layerMask) == false) {
-				Debug.DrawRay(downRay.origin, downRay.direction, Color.cyan);
-				if(Physics.Raycast(downForwardRay, 1f, layerMask) == false) {
-					Debug.DrawRay(downForwardRay.origin, downForwardRay.direction, Color.yellow);
+				if(Physics.Raycast(downRayLeftForward, 0.5f, layerMask) == false
+				&& Physics.Raycast(downRayLeftBack, 0.5f, layerMask) == false
+				&& Physics.Raycast(downRayRightForward, 0.5f, layerMask) == false
+				&& Physics.Raycast(downRayRightBack, 0.5f, layerMask) == false
+				) {
 					moveInput = new Vector3(Input.GetAxisRaw("Horizontal"), -1.5f, Input.GetAxisRaw("Vertical"));
-				}
-			}
+			
 		}else 
 		{
 			moveInput = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
@@ -80,6 +82,8 @@ public class KSPlayer : MonoBehaviour {
 		// else if(Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.RightArrow)){
 		// 	moveInput = new Vector3(Input.GetAxisRaw("Horizontal"), 0, 0);
 		// }
+		
+		
 		Vector3 moveVelocity = moveInput.normalized * moveSpeed;
 		playerController.Move(moveVelocity);
 
