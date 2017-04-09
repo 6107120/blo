@@ -41,16 +41,17 @@ public class KSPlayer : MonoBehaviour {
 		Vector3 moveInput = Vector3.zero;
 		
 		//cal ray
+		float scale =  transform.localScale.x *  transform.localScale.z;
 		Ray ray = new Ray(transform.position, transform.forward);
 		RaycastHit hit;
 		Debug.DrawRay(ray.origin, ray.direction, Color.gray);
-		Ray upBaseray = new Ray(transform.position - Vector3.up * transform.localScale.x, transform.forward);
+		Ray upBaseray = new Ray(transform.position - Vector3.up * 0.5f, transform.forward);
 		Ray upForwardRay = new Ray(transform.position + Vector3.up, transform.forward);
 
-		Ray downRayLeftForward = new Ray(transform.position + Vector3.left/2 + Vector3.forward/2, Vector3.down);
-		Ray downRayLeftBack = new Ray(transform.position + Vector3.left/2 + Vector3.back/2, Vector3.down);
-		Ray downRayRightForward = new Ray(transform.position + Vector3.right/2 + Vector3.forward/2, Vector3.down);
-		Ray downRayRightBack = new Ray(transform.position + Vector3.right/2 + Vector3.back/2, Vector3.down);
+		Ray downRayLeftForward = new Ray(transform.position + Vector3.left * scale + Vector3.forward * scale, Vector3.down);
+		Ray downRayLeftBack = new Ray(transform.position + Vector3.left * scale + Vector3.back * scale, Vector3.down);
+		Ray downRayRightForward = new Ray(transform.position + Vector3.right * scale + Vector3.forward * scale, Vector3.down);
+		Ray downRayRightBack = new Ray(transform.position + Vector3.right * scale + Vector3.back * scale, Vector3.down);
 		// Debug.DrawRay(upBaseray.origin, upBaseray.direction, Color.red);
 		// Debug.DrawRay(upRay.origin, upRay.direction, Color.red);
 		// Debug.DrawRay(upForwardRay.origin, upForwardRay.direction, Color.red);
@@ -58,10 +59,11 @@ public class KSPlayer : MonoBehaviour {
 		// Debug.DrawRay(ray.origin, ray.direction, Color.green);
 		// Debug.DrawRay(downForwardRay.origin, downForwardRay.direction, Color.yellow);
 		Debug.DrawRay(downRayLeftForward.origin, downRayLeftForward.direction, Color.yellow);	
+		print(transform.localScale.x);
 
 		if(Physics.Raycast(upBaseray, 0.5f, layerMask)) {
 				if(Physics.Raycast(upForwardRay, 1f, layerMask) == false) {
-					moveInput = new Vector3(Input.GetAxisRaw("Horizontal"), 1.5f, Input.GetAxisRaw("Vertical"));
+					moveInput = MoveInput(1.5f);
 				}
 		}else
 				if(Physics.Raycast(downRayLeftForward, 0.5f, layerMask) == false
@@ -69,11 +71,11 @@ public class KSPlayer : MonoBehaviour {
 				&& Physics.Raycast(downRayRightForward, 0.5f, layerMask) == false
 				&& Physics.Raycast(downRayRightBack, 0.5f, layerMask) == false
 				) {
-					moveInput = new Vector3(Input.GetAxisRaw("Horizontal"), -1.5f, Input.GetAxisRaw("Vertical"));
+					moveInput =  MoveInput(-1.5f);
 			
 		}else 
 		{
-			moveInput = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
+			moveInput =  MoveInput(0);
 		}
 		
 		// if(Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.DownArrow)){
@@ -108,5 +110,18 @@ public class KSPlayer : MonoBehaviour {
 		}
 		//lastPosition = transform.position;
 		
+	}
+	public Vector3 MoveInput(float y) {
+		Vector3 moveInput = Vector3.zero;
+		if(Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.DownArrow)){
+			moveInput = new Vector3(0, y, Input.GetAxisRaw("Vertical"));
+		}
+		else if(Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.RightArrow)){
+			moveInput = new Vector3(Input.GetAxisRaw("Horizontal"), y, 0);
+		}
+		else{
+			moveInput = new Vector3(Input.GetAxisRaw("Horizontal"), y, Input.GetAxisRaw("Vertical"));
+		}
+		return moveInput;
 	}
 }
