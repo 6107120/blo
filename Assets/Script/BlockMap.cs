@@ -98,7 +98,9 @@ public class BlockMap : MonoBehaviour {
 		bool[,] beforeFloorBlocks = allFloors[y-1];
 		bool[,] canFloorBlocks = new bool[(int)mapSize.x, (int)mapSize.z];
 		List<Coord> list = new List<Coord> ();
+		Queue<Coord> queue;
 		int seedCount = 0;
+		int count = 0;
 
 		for (int xSize=0; xSize<mapSize.x; xSize++){
 			for (int zSize=0; zSize<mapSize.z; zSize++){
@@ -109,8 +111,9 @@ public class BlockMap : MonoBehaviour {
 							int neighbourZ = zSize + z;
 							if(Mathf.Abs(x) != Mathf.Abs(z) || (x==0 && z==0)){
 								if(neighbourX >= 0 && neighbourX < beforeFloorBlocks.GetLength(0) && neighbourZ >= 0 && neighbourZ < beforeFloorBlocks.GetLength(1)) {
-									if(Utility.TrueOrFalse(3,seedCount*seed))
-									canFloorBlocks[neighbourX, neighbourZ] = true;
+									//if(Utility.TrueOrFalse(3,seedCount*seed))
+									//canFloorBlocks[neighbourX, neighbourZ] = true;
+									list.Add(new Coord(neighbourX, 0, neighbourZ));
 								}
 							}
 							seedCount++;
@@ -118,7 +121,13 @@ public class BlockMap : MonoBehaviour {
 					}
 				}
 			}
-		}	
+		}
+		queue = new Queue<Coord>(Utility.ShuffleArray(list.ToArray(), seed));
+		while(count < blockCount){
+			Coord buf = queue.Dequeue();
+			canFloorBlocks[buf.x, buf.z] = true;
+			count++;
+		}
 		return canFloorBlocks;
 	}
 
