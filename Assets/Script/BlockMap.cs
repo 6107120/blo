@@ -9,7 +9,7 @@ public class BlockMap : MonoBehaviour {
 	public Vector3 mapSize;
 	public Vector3 startBlock;
 	public Vector3 finishBlock;
-	List<Coord> allBlockCoords;
+	List<bool[,]> allFloors;
 	Queue<Coord> shuffledBlockCoords;
 	public int seed = 10;
 	public int blockCount = 10;
@@ -22,17 +22,10 @@ public class BlockMap : MonoBehaviour {
 	}
 
 	public void GenerateMap() {
-		
-		//blocks can position from Coords
-		// allBlockCoords = new List<Coord> ();
-		// for (int y=0; y<mapSize.y; y++){
-		// 	for (int x=0; x<mapSize.x; x++){
-		// 		for (int z=0; z<mapSize.z; z++){
-		// 			allBlockCoords.Add(new Coord(x,y,z));
-		// 		}
-		// 	}
-		// }
-		// shuffledBlockCoords = new Queue<Coord>(Utility.ShuffleArray(allBlockCoords.ToArray(), seed));
+		allFloors = new List<bool[,]>();
+		startPoint = new Coord((int)startBlock.x, (int)startBlock.y, (int)startBlock.z);
+		finishPoint = new Coord((int)finishBlock.x, (int)finishBlock.y, (int)finishBlock.z);
+
 		//Inheritance
 		string holderName = "Generated Map";
 		if(transform.FindChild(holderName)) {
@@ -41,58 +34,22 @@ public class BlockMap : MonoBehaviour {
 		Transform mapHolder = new GameObject(holderName).transform;
 		mapHolder.parent = transform;
 
-		
-		// for(int i=0; i<blockCount; i++) {
-		// 			Coord randomCoord = GetRandomCoord();
-		// 			Vector3 blockPosition = CoordToPosition(randomCoord.x, randomCoord.y, randomCoord.z);
-		// 			Transform newBlock = Instantiate(blockPrefab, blockPosition + Vector3.up * 0.5f, Quaternion.identity);
-		// 			newBlock.parent = mapHolder;
-		// }
-		
-		//first floor search
-		startPoint = new Coord((int)startBlock.x, (int)startBlock.y, (int)startBlock.z);
-		finishPoint = new Coord((int)finishBlock.x, (int)finishBlock.y, (int)finishBlock.z);
+		//set block on first floor
+		allFloors.Add(baseBlockAccessible());
 
-		bool[,,] blockMap = new bool[(int)mapSize.x, (int)mapSize.y, (int)mapSize.z];
-		bool[,] mapFlags = new bool[blockMap.GetLength(0), blockMap.GetLength(2)];
-		Queue<Coord> queue = new Queue<Coord> ();
-		queue.Enqueue(startPoint);
-		mapFlags[startPoint.x, startPoint.z] = true;
-
-
-		int seedCount = 0;
-		int checkCount = 1;
-		for(int i=0; i<blockCount; i++) {
-			Coord block = queue.Dequeue();
-			for(int x=-1; x<=1; x++){
-				for(int z=-1; z<=1; z++){		
-					int neighbourX = block.x + x;
-					int neighbourZ = block.z + z;
-					seedCount ++;
-					if((x == 0 || z == 0)){
-						if(neighbourX >= 0 && neighbourX < mapFlags.GetLength(0) && neighbourZ >= 0 && neighbourZ < mapFlags.GetLength(1)) {
-							if(!mapFlags[neighbourX, neighbourZ] && Utility.TrueOrFalse(3,seedCount*seed)) {
-								mapFlags[neighbourX, neighbourZ] = true;
-								queue.Enqueue(new Coord(neighbourX, 0 ,neighbourZ));
-								checkCount++;
-									
-
-								Vector3 xx = CoordToPosition(neighbourX, 0, neighbourZ);
-								Transform newBlock = Instantiate(blockPrefab, xx + Vector3.up * 0.5f, Quaternion.identity);
-								newBlock.parent = mapHolder;
-						// 		accessibleTileCount ++;
-							}
-						}
+		for (int y=0; y<mapSize.y; y++){
+			for (int x=0; x<mapSize.x; x++){
+				for (int z=0; z<mapSize.z; z++){
+					if(allFloors[0][x,z]){
+						Vector3 blockPosition = CoordToPosition(x, y, z);
+						Transform newBlock = Instantiate(blockPrefab, blockPosition + Vector3.up * 0.5f, Quaternion.identity);
+						newBlock.parent = mapHolder;
 					}
 				}
 			}
-			queue.Enqueue(block);
-			// if(checkCount >= blockCount || checkCount >100);
-			// break;
 		}
- 		seedCount = 0;
-		checkCount = 1;
-		
+
+
 		// for(int i=0; i<blockCount; i++) {
 		// 	Coord randomCoord = GetRandomCoord();
 		// 	Vector3 blockPosition = CoordToPosition(randomCoord.x, randomCoord.y, randomCoord.z);
@@ -178,6 +135,82 @@ public class BlockMap : MonoBehaviour {
 // 		int targetAccessibleTileCount = (int)(mapSize.x * mapSize.y - currentObstacleCount);
 // 		return targetAccessibleTileCount == accessibleTileCount;
 // 	}
+	bool[,] baseBlockAccessible() {
+		bool[,] eachFloorBlocks = new bool[(int)mapSize.x, (int)mapSize.z];
+		Queue<Coord> queue = new Queue<Coord> ();
+		queue.Enqueue(startPoint);
+		eachFloorBlocks[startPoint.x, startPoint.z] = true;
+
+
+		int seedCount = 0;
+		int checkCount = 1;
+		// for(int i=0; i<blockCount; i++) {
+		while(true){
+			if(queue.Count == 0)
+				break;
+			Coord block = queue.Dequeue();
+			for(int x=-1; x<=1; x++){
+				for(int z=-1; z<=1; z++){		
+					int neighbourX = block.x + x;
+					int neighbourZ = block.z + z;
+					seedCount ++;
+					if(Mathf.Abs(x) != Mathf.Abs(z)){
+						if(neighbourX >= 0 && neighbourX < eachFloorBlocks.GetLength(0) && neighbourZ >= 0 && neighbourZ < eachFloorBlocks.GetLength(1)) {
+							if(!eachFloorBlocks[neighbourX, neighbourZ] && Utility.TrueOrFalse(3,seedCount*seed)) {
+								eachFloorBlocks[neighbourX, neighbourZ] = true;
+								queue.Enqueue(new Coord(neighbourX, 0 ,neighbourZ));
+								checkCount++;
+							}
+						}
+					}
+				}
+			}
+			queue.Enqueue(block);
+			if(checkCount >= blockCount || checkCount >20)
+			break;
+		}
+		
+		return eachFloorBlocks;
+	}
+
+	bool[,] blockAccessible(List<bool[,]> allFloors, int y) {
+		bool[,] thisFloorBlocks = new bool[(int)mapSize.x, (int)mapSize.z];
+		bool[,] beforeFloorBlocks = new bool[(int)mapSize.x, (int)mapSize.z];
+		Queue<Coord> queue = new Queue<Coord> ();
+		queue.Enqueue(startPoint);
+		thisFloorBlocks[startPoint.x, startPoint.z] = true;
+
+
+		int seedCount = 0;
+		int checkCount = 1;
+		// for(int i=0; i<blockCount; i++) {
+		while(true){
+			if(queue.Count == 0)
+				break;
+			Coord block = queue.Dequeue();
+			for(int x=-1; x<=1; x++){
+				for(int z=-1; z<=1; z++){		
+					int neighbourX = block.x + x;
+					int neighbourZ = block.z + z;
+					seedCount ++;
+					if(Mathf.Abs(x) != Mathf.Abs(z)){
+						if(neighbourX >= 0 && neighbourX < thisFloorBlocks.GetLength(0) && neighbourZ >= 0 && neighbourZ < thisFloorBlocks.GetLength(1)) {
+							if(!thisFloorBlocks[neighbourX, neighbourZ] && Utility.TrueOrFalse(3,seedCount*seed)) {
+								thisFloorBlocks[neighbourX, neighbourZ] = true;
+								queue.Enqueue(new Coord(neighbourX, 0 ,neighbourZ));
+								checkCount++;
+							}
+						}
+					}
+				}
+			}
+			queue.Enqueue(block);
+			if(checkCount >= blockCount || checkCount >20)
+			break;
+		}
+		
+		return thisFloorBlocks;
+	}
 
 	Vector3 CoordToPosition(int x, int y, int z) {
 		return new Vector3(-mapSize.x/2 + 0.5f + x, y, -mapSize.z/2 + 0.5f + z);
