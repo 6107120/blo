@@ -55,16 +55,14 @@ public class BlockMap : MonoBehaviour {
 	bool[,] baseBlockAccessible() {
 		bool[,] eachFloorBlocks = new bool[(int)mapSize.x, (int)mapSize.z];
 		Queue<Coord> queue = new Queue<Coord> ();
+		List<Coord> list = new List<Coord> ();
 		queue.Enqueue(startPoint);
 		eachFloorBlocks[startPoint.x, startPoint.z] = true;
 
+		int check = 1;
+		int count = 0;
 
-		int seedCount = 0;
-		int checkCount = 1;
-		// for(int i=0; i<blockCount; i++) {
-		while(true){
-			if(queue.Count == 0)
-				break;
+		while(count < eachFloorBlocks.GetLength(0) * eachFloorBlocks.GetLength(1)){
 			Coord block = queue.Dequeue();
 			for(int x=-1; x<=1; x++){
 				for(int z=-1; z<=1; z++){		
@@ -72,20 +70,24 @@ public class BlockMap : MonoBehaviour {
 					int neighbourZ = block.z + z;
 					if(Mathf.Abs(x) != Mathf.Abs(z)){
 						if(neighbourX >= 0 && neighbourX < eachFloorBlocks.GetLength(0) && neighbourZ >= 0 && neighbourZ < eachFloorBlocks.GetLength(1)) {
-							if(!eachFloorBlocks[neighbourX, neighbourZ] && Utility.TrueOrFalse(2,seedCount*seed)) {
-								eachFloorBlocks[neighbourX, neighbourZ] = true;
-								queue.Enqueue(new Coord(neighbourX, 0 ,neighbourZ));
-								checkCount++;
-								break;
+							if(!eachFloorBlocks[neighbourX, neighbourZ]) {
+								list.Add(new Coord(neighbourX, 0 ,neighbourZ));
 							}
 						}
 					}
 				}
 			}
-			seedCount ++;
-			if((seedCount < 15 && queue.Count < 2) || Utility.TrueOrFalse(2,seedCount*seed))
-				queue.Enqueue(block);
-			if(checkCount >= blockCount || seedCount >15)
+			list.Add(block);
+			int randNum = Utility.randomNumber(list.Count, seed+count);
+			Coord buf = list[randNum];
+			list.Clear();
+			if(!eachFloorBlocks[buf.x, buf.z]) {
+				eachFloorBlocks[buf.x, buf.z] = true;
+				check ++;
+			}
+			queue.Enqueue(buf);
+			count++;
+			if(check >= blockCount)
 				break;
 		}
 		
@@ -95,7 +97,7 @@ public class BlockMap : MonoBehaviour {
 	bool[,] blockAccessible(List<bool[,]> allFloors, int y) {
 		bool[,] beforeFloorBlocks = allFloors[y-1];
 		bool[,] canFloorBlocks = new bool[(int)mapSize.x, (int)mapSize.z];
-
+		List<Coord> list = new List<Coord> ();
 		int seedCount = 0;
 
 		for (int xSize=0; xSize<mapSize.x; xSize++){

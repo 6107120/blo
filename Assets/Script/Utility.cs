@@ -28,15 +28,10 @@ public static class Utility {
 	return tor;
 	}
 
-	public static bool TrueOrFalse2 (int falsePersent) {
-	bool tor;
-	System.Random prng = new System.Random();
-	int randomValue = prng.Next(falsePersent);
-	if(randomValue == 0)
-		tor = true;
-	else
-		tor = false;
+	public static int randomNumber (int max, int seed) {
+	System.Random prng = new System.Random(seed);
+	int randomValue = prng.Next(max);
 
-	return tor;
+	return randomValue;
 	}
 }
