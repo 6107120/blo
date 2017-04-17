@@ -7,20 +7,22 @@ public class BlockMap : MonoBehaviour {
 	// public Transform tilePrefab;
 	public Transform blockPrefab;
 	public Vector3 mapSize;
-	// [RangeAttribute(0,1)]
-	// public float outlinePercent;
-	[RangeAttribute(0,1)]
-	public float blockPercent;
-	 List<Coord> allBlockCoords;
+	public Vector2 startPoint;
+
+	public Vector3 finishPoint;
+	List<Coord> allBlockCoords;
 	Queue<Coord> shuffledBlockCoords;
 	public int seed = 10;
 	public int blockCount = 10;
+
 	// Coord mapCentre;
 	void Start () {
 		GenerateMap();
 	}
 
 	public void GenerateMap() {
+		float blockHalfSize = (float)blockPrefab.transform.localScale.x/2;
+		//blocks can position from Coords
 		allBlockCoords = new List<Coord> ();
 		for (int y=0; y<mapSize.y; y++){
 			for (int x=0; x<mapSize.x; x++){
@@ -30,7 +32,7 @@ public class BlockMap : MonoBehaviour {
 			}
 		}
 		shuffledBlockCoords = new Queue<Coord>(Utility.ShuffleArray(allBlockCoords.ToArray(), seed));
-
+		//Inheritance
 		string holderName = "Generated Map";
 		if(transform.FindChild(holderName)) {
 			DestroyImmediate(transform.FindChild(holderName).gameObject);
@@ -42,12 +44,17 @@ public class BlockMap : MonoBehaviour {
 		for(int i=0; i<blockCount; i++) {
 					Coord randomCoord = GetRandomCoord();
 					Vector3 blockPosition = CoordToPosition(randomCoord.x, randomCoord.y, randomCoord.z);
-					//Vector3 blockPosition = CoordToPosition(x,y,z);
-					Transform newBlock = Instantiate(blockPrefab, blockPosition + Vector3.up * 0.5f, Quaternion.identity);
-					newBlock.localScale = Vector3.one * (1-blockPercent);
+					Transform newBlock = Instantiate(blockPrefab, blockPosition + Vector3.up * blockHalfSize, Quaternion.identity);
 					newBlock.parent = mapHolder;
 		}
 		
+		//first floor search
+		// for(int i=0; i<mapSize.x * mapSize.z; i++) {
+		// 			Coord randomCoord = GetRandomCoord();
+		// 			Vector3 blockPosition = CoordToPosition(randomCoord.x, randomCoord.y, randomCoord.z);
+		// 			Transform newBlock = Instantiate(blockPrefab, blockPosition + Vector3.up * blockHalfSize, Quaternion.identity);
+		// 			newBlock.parent = mapHolder;
+		// }
 	}
 
 
