@@ -59,7 +59,7 @@ public class KSPlayer : MonoBehaviour {
 		// Debug.DrawRay(ray.origin, ray.direction, Color.green);
 		// Debug.DrawRay(downForwardRay.origin, downForwardRay.direction, Color.yellow);
 		Debug.DrawRay(downRayLeftForward.origin, downRayLeftForward.direction, Color.yellow);	
-		print(transform.localScale.x);
+		//print(transform.localScale.x);
 
 		if(Physics.Raycast(upBaseray, 0.5f, layerMask)) {
 				if(Physics.Raycast(upForwardRay, 1f, layerMask) == false) {

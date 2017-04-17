@@ -16,5 +16,27 @@ public static class Utility {
 		return array;
 	}
 
-	
+	public static bool TrueOrFalse (int falsePersent, int seed) {
+		bool tor;
+		System.Random prng = new System.Random(seed);
+		int randomValue = prng.Next(0,falsePersent);
+		if(randomValue == 0)
+			tor = true;
+		else
+			tor = false;
+
+	return tor;
+	}
+
+	public static bool TrueOrFalse2 (int falsePersent) {
+	bool tor;
+	System.Random prng = new System.Random();
+	int randomValue = prng.Next(falsePersent);
+	if(randomValue == 0)
+		tor = true;
+	else
+		tor = false;
+
+	return tor;
+	}
 }

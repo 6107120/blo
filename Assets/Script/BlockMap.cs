@@ -7,31 +7,32 @@ public class BlockMap : MonoBehaviour {
 	// public Transform tilePrefab;
 	public Transform blockPrefab;
 	public Vector3 mapSize;
-	public Vector2 startPoint;
-
-	public Vector3 finishPoint;
+	public Vector3 startBlock;
+	public Vector3 finishBlock;
 	List<Coord> allBlockCoords;
 	Queue<Coord> shuffledBlockCoords;
 	public int seed = 10;
 	public int blockCount = 10;
 
-	// Coord mapCentre;
+	public Coord startPoint;
+
+	public Coord finishPoint;
 	void Start () {
 		GenerateMap();
 	}
 
 	public void GenerateMap() {
-		float blockHalfSize = (float)blockPrefab.transform.localScale.x/2;
+		
 		//blocks can position from Coords
-		allBlockCoords = new List<Coord> ();
-		for (int y=0; y<mapSize.y; y++){
-			for (int x=0; x<mapSize.x; x++){
-				for (int z=0; z<mapSize.z; z++){
-					allBlockCoords.Add(new Coord(x,y,z));
-				}
-			}
-		}
-		shuffledBlockCoords = new Queue<Coord>(Utility.ShuffleArray(allBlockCoords.ToArray(), seed));
+		// allBlockCoords = new List<Coord> ();
+		// for (int y=0; y<mapSize.y; y++){
+		// 	for (int x=0; x<mapSize.x; x++){
+		// 		for (int z=0; z<mapSize.z; z++){
+		// 			allBlockCoords.Add(new Coord(x,y,z));
+		// 		}
+		// 	}
+		// }
+		// shuffledBlockCoords = new Queue<Coord>(Utility.ShuffleArray(allBlockCoords.ToArray(), seed));
 		//Inheritance
 		string holderName = "Generated Map";
 		if(transform.FindChild(holderName)) {
@@ -41,19 +42,62 @@ public class BlockMap : MonoBehaviour {
 		mapHolder.parent = transform;
 
 		
-		for(int i=0; i<blockCount; i++) {
-					Coord randomCoord = GetRandomCoord();
-					Vector3 blockPosition = CoordToPosition(randomCoord.x, randomCoord.y, randomCoord.z);
-					Transform newBlock = Instantiate(blockPrefab, blockPosition + Vector3.up * blockHalfSize, Quaternion.identity);
-					newBlock.parent = mapHolder;
-		}
-		
-		//first floor search
-		// for(int i=0; i<mapSize.x * mapSize.z; i++) {
+		// for(int i=0; i<blockCount; i++) {
 		// 			Coord randomCoord = GetRandomCoord();
 		// 			Vector3 blockPosition = CoordToPosition(randomCoord.x, randomCoord.y, randomCoord.z);
-		// 			Transform newBlock = Instantiate(blockPrefab, blockPosition + Vector3.up * blockHalfSize, Quaternion.identity);
+		// 			Transform newBlock = Instantiate(blockPrefab, blockPosition + Vector3.up * 0.5f, Quaternion.identity);
 		// 			newBlock.parent = mapHolder;
+		// }
+		
+		//first floor search
+		startPoint = new Coord((int)startBlock.x, (int)startBlock.y, (int)startBlock.z);
+		finishPoint = new Coord((int)finishBlock.x, (int)finishBlock.y, (int)finishBlock.z);
+
+		bool[,,] blockMap = new bool[(int)mapSize.x, (int)mapSize.y, (int)mapSize.z];
+		bool[,] mapFlags = new bool[blockMap.GetLength(0), blockMap.GetLength(2)];
+		Queue<Coord> queue = new Queue<Coord> ();
+		queue.Enqueue(startPoint);
+		mapFlags[startPoint.x, startPoint.z] = true;
+
+
+		int seedCount = 0;
+		int checkCount = 1;
+		for(int i=0; i<blockCount; i++) {
+			Coord block = queue.Dequeue();
+			for(int x=-1; x<=1; x++){
+				for(int z=-1; z<=1; z++){		
+					int neighbourX = block.x + x;
+					int neighbourZ = block.z + z;
+					seedCount ++;
+					if((x == 0 || z == 0)){
+						if(neighbourX >= 0 && neighbourX < mapFlags.GetLength(0) && neighbourZ >= 0 && neighbourZ < mapFlags.GetLength(1)) {
+							if(!mapFlags[neighbourX, neighbourZ] && Utility.TrueOrFalse(3,seedCount*seed)) {
+								mapFlags[neighbourX, neighbourZ] = true;
+								queue.Enqueue(new Coord(neighbourX, 0 ,neighbourZ));
+								checkCount++;
+									
+
+								Vector3 xx = CoordToPosition(neighbourX, 0, neighbourZ);
+								Transform newBlock = Instantiate(blockPrefab, xx + Vector3.up * 0.5f, Quaternion.identity);
+								newBlock.parent = mapHolder;
+						// 		accessibleTileCount ++;
+							}
+						}
+					}
+				}
+			}
+			queue.Enqueue(block);
+			// if(checkCount >= blockCount || checkCount >100);
+			// break;
+		}
+ 		seedCount = 0;
+		checkCount = 1;
+		
+		// for(int i=0; i<blockCount; i++) {
+		// 	Coord randomCoord = GetRandomCoord();
+		// 	Vector3 blockPosition = CoordToPosition(randomCoord.x, randomCoord.y, randomCoord.z);
+		// 	Transform newBlock = Instantiate(blockPrefab, blockPosition + Vector3.up * blockHalfSize, Quaternion.identity);
+		// 	newBlock.parent = mapHolder;
 		// }
 	}
 
