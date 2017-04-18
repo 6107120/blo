@@ -21,25 +21,20 @@ public class BlockMap : MonoBehaviour {
 	public void GenerateMap() {
 		allFloors = new List<bool[,]>();
 		startPoint = new Coord2((int)startBlock.x, (int)startBlock.z);
-
-		// int proportionSizeBlock = 3;
-		// proportionSize = new int[(int)mapSize.y];
-		// proportionSize[proportionSize.GetLength(0)-1] = 1;
-		// proportionSize[proportionSize.GetLength(0)-2] = 3;
-		// for(int i=proportionSize.GetLength(0)-3; i>=0; i--){
-		// 	proportionSize[i] = 1 + proportionSizeBlock;
-		// 	proportionSizeBlock += (int)mapSize.x;
-		// }
+		if(blockPercent<=0.1f)
+			blockPercent = 0.1f;
 
 		int[,] availableBlock = new int[(int)mapSize.y,3];
 		int[] availableArea = new int[(int)mapSize.y];
 
-		for(int i=0; i<availableArea.GetLength(0); i++){
-			int result = (int)mapSize.z / (i+1);
+		availableArea[0] = availableArea.GetLength(0);
+		for(int i=1; i<availableArea.GetLength(0); i++){
+			int result = availableArea[i-1] - Utility.randomNumber(0,2,seed+i);
 			if(result == 0)
 				result = 1;
 			availableArea[i] = result;
 		}
+
 		for(int i=0; i<availableBlock.GetLength(0); i++){
 			int minResult = (int)Mathf.Sqrt(mapSize.x * availableArea[i]);
 			int maxResult = (int)(minResult * minResult * blockPercent);
@@ -50,9 +45,11 @@ public class BlockMap : MonoBehaviour {
 			availableBlock[i,0] = minResult;
 			availableBlock[i,1] = maxResult;
 		}
+
 		for(int i=0; i<availableBlock.GetLength(0); i++){
 			availableBlock[i,2] = Utility.randomNumber(availableBlock[i,0], availableBlock[i,1], seed);
-			//print(i + " " + availableBlock[i,0] + " " + availableBlock[i,1] + " " + availableBlock[i,2]);
+			print(i + " " + availableBlock[i,0] + " " + availableBlock[i,1] + " " + availableBlock[i,2]);
+			print(i + "availableArea : " + availableArea[i]);
 		}
 		
 
@@ -119,7 +116,7 @@ public class BlockMap : MonoBehaviour {
 			if(check >= availableBlock[0,2])
 				break;
 		}
-		
+		//print(0 + " Count : " + count);
 		return eachFloorBlocks;
 	}
 
@@ -131,20 +128,15 @@ public class BlockMap : MonoBehaviour {
 		int count = 0;
 
 		for (int xSize=0; xSize<mapSize.x; xSize++){
-			for (int zSize=availableArea[y]; zSize<mapSize.z; zSize++){
+			for (int zSize=0; zSize<mapSize.z; zSize++){
 				if(beforeFloorBlocks[xSize,zSize]){
 					for(int x=-1; x<=1; x++){
 						for(int z=-1; z<=1; z++){
 							int neighbourX = xSize + x;
 							int neighbourZ = zSize + z;
-							if(Mathf.Abs(x) != Mathf.Abs(z)){
-								if(neighbourX >= 0+availableArea[y] && neighbourX < beforeFloorBlocks.GetLength(0) && neighbourZ >= 0+availableArea[y] && neighbourZ < beforeFloorBlocks.GetLength(1)) {
-									list.Add(new Coord2(neighbourX, neighbourZ));
-								}
-							}
-							if(x==0 && z==0){
-								if(neighbourX >= 0 && neighbourX < beforeFloorBlocks.GetLength(0) && neighbourZ >= 0 && neighbourZ < beforeFloorBlocks.GetLength(1)) {
-									for(int i=0; i<2; i++)
+							if(Mathf.Abs(x) != Mathf.Abs(z) || x==0 && z==0){
+								// if(neighbourX >= 0+availableArea[y] && neighbourX < beforeFloorBlocks.GetLength(0) && neighbourZ >= 0+availableArea[y] && neighbourZ < beforeFloorBlocks.GetLength(1)) {
+								if(neighbourX >= 0 && neighbourX < beforeFloorBlocks.GetLength(0) && neighbourZ >= 0 && neighbourZ < beforeFloorBlocks.GetLength(1)) {	
 									list.Add(new Coord2(neighbourX, neighbourZ));
 								}
 							}
@@ -159,10 +151,16 @@ public class BlockMap : MonoBehaviour {
 				if(queue.Count == 0)
 					break;
 				Coord2 buf = queue.Dequeue();
-				canFloorBlocks[buf.x, buf.z] = true;
-				count++;
+				if(availableArea[0] - availableArea[y] <= buf.z){
+					canFloorBlocks[buf.x, buf.z] = true;
+					count++;
+				}else{
+					canFloorBlocks[buf.x, buf.z] = false;
+					count--;
+				}
 			}
 		}
+		//print(y + " Count : " + count);
 		return canFloorBlocks;
 	}
 
