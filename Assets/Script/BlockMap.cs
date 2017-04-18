@@ -8,15 +8,14 @@ public class BlockMap : MonoBehaviour {
 	public Transform blockPrefab;
 	public Vector3 mapSize;
 	public Vector3 startBlock;
-	public Vector3 finishBlock;
 	List<bool[,]> allFloors;
+	int[] proportionSize;
 	Queue<Coord> shuffledBlockCoords;
 	public int seed = 10;
 	public int blockCount = 10;
 
-	public Coord startPoint;
+	Coord startPoint;
 
-	public Coord finishPoint;
 	void Start () {
 		GenerateMap();
 	}
@@ -24,7 +23,16 @@ public class BlockMap : MonoBehaviour {
 	public void GenerateMap() {
 		allFloors = new List<bool[,]>();
 		startPoint = new Coord((int)startBlock.x, (int)startBlock.y, (int)startBlock.z);
-		finishPoint = new Coord((int)finishBlock.x, (int)finishBlock.y, (int)finishBlock.z);
+
+		// int proportionSizeBlock = 3;
+		// proportionSize = new int[(int)mapSize.y];
+		// proportionSize[proportionSize.GetLength(0)-1] = 1;
+		// proportionSize[proportionSize.GetLength(0)-2] = 3;
+		// for(int i=proportionSize.GetLength(0)-3; i>=0; i--){
+		// 	proportionSize[i] = 1 + proportionSizeBlock;
+		// 	proportionSizeBlock += (int)mapSize.x;
+		// }
+
 
 		//Inheritance
 		string holderName = "Generated Map";
@@ -97,12 +105,12 @@ public class BlockMap : MonoBehaviour {
 	bool[,] blockAccessible(List<bool[,]> allFloors, int y) {
 		bool[,] beforeFloorBlocks = allFloors[y-1];
 		bool[,] canFloorBlocks = new bool[(int)mapSize.x, (int)mapSize.z];
+		int reductionSize = (y>=(int)mapSize.x)? (int)mapSize.x-1 : y;
 		List<Coord> list = new List<Coord> ();
 		Queue<Coord> queue;
-		int seedCount = 0;
 		int count = 0;
 
-		for (int xSize=0; xSize<mapSize.x; xSize++){
+		for (int xSize=reductionSize; xSize<mapSize.x; xSize++){
 			for (int zSize=0; zSize<mapSize.z; zSize++){
 				if(beforeFloorBlocks[xSize,zSize]){
 					for(int x=-1; x<=1; x++){
@@ -111,12 +119,9 @@ public class BlockMap : MonoBehaviour {
 							int neighbourZ = zSize + z;
 							if(Mathf.Abs(x) != Mathf.Abs(z) || (x==0 && z==0)){
 								if(neighbourX >= 0 && neighbourX < beforeFloorBlocks.GetLength(0) && neighbourZ >= 0 && neighbourZ < beforeFloorBlocks.GetLength(1)) {
-									//if(Utility.TrueOrFalse(3,seedCount*seed))
-									//canFloorBlocks[neighbourX, neighbourZ] = true;
 									list.Add(new Coord(neighbourX, 0, neighbourZ));
 								}
 							}
-							seedCount++;
 						}
 					}
 				}
@@ -148,6 +153,16 @@ public class BlockMap : MonoBehaviour {
 		public Coord(int x, int y, int z) {
 			this.x = x;
 			this.y = y;
+			this.z = z;
+		}
+	}
+
+	public struct Coord2 {
+		public int x;
+		public int z;
+
+		public Coord2(int x, int z) {
+			this.x = x;
 			this.z = z;
 		}
 	}
