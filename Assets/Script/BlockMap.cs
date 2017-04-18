@@ -13,6 +13,9 @@ public class BlockMap : MonoBehaviour {
 	public int seed = 10;
 	[RangeAttribute(0,50)]
 	public int blockCount = 10;
+	[RangeAttribute(0,1)]
+	public float blockPercent = 1;
+	
 
 	Coord2 startPoint;
 
@@ -33,6 +36,31 @@ public class BlockMap : MonoBehaviour {
 		// 	proportionSizeBlock += (int)mapSize.x;
 		// }
 
+		int[,] availableBlock = new int[(int)mapSize.y,3];
+		int[] availableArea = new int[(int)mapSize.y];
+
+		for(int i=0; i<availableArea.GetLength(0); i++){
+			int result = (int)mapSize.z / (i+1);
+			if(result == 0)
+				result = 1;
+			availableArea[availableArea.GetLength(0)-1 - i] = result;
+		}
+		for(int i=0; i<availableBlock.GetLength(0); i++){
+			int minResult = (int)Mathf.Sqrt(mapSize.x * availableArea[i]);
+			int maxResult = (int)(minResult * minResult * blockPercent);
+			if(maxResult < minResult + 1)
+				maxResult = minResult + 1;
+			if(maxResult > (int)mapSize.x * availableArea[i])
+				maxResult = (int)mapSize.x * availableArea[i];
+			availableBlock[i,0] = minResult;
+			availableBlock[i,1] = maxResult;
+		}
+		for(int i=0; i<availableBlock.GetLength(0); i++){
+			availableBlock[i,2] = Utility.randomNumber(availableBlock[i,0], availableBlock[i,1]);
+			print(availableBlock[i,0]);
+			print(availableBlock[i,1]);
+		}
+
 
 		//Inheritance
 		string holderName = "Generated Map";
@@ -43,9 +71,9 @@ public class BlockMap : MonoBehaviour {
 		mapHolder.parent = transform;
 
 		//set block on first floor
-		allFloors.Add(baseBlockAccessible());
+		allFloors.Add(baseBlockAccessible(availableBlock));
 		for(int i=1; i<mapSize.y; i++)
-		allFloors.Add(blockAccessible(allFloors, i));
+		allFloors.Add(blockAccessible(allFloors, i, availableBlock, availableArea));
 
 		for (int y=0; y<mapSize.y; y++){
 			for (int x=0; x<mapSize.x; x++){
@@ -60,7 +88,7 @@ public class BlockMap : MonoBehaviour {
 		}
 	}
 
-	bool[,] baseBlockAccessible() {
+	bool[,] baseBlockAccessible(int[,] availableBlock) {
 		bool[,] eachFloorBlocks = new bool[(int)mapSize.x, (int)mapSize.z];
 		List<Coord2> list = new List<Coord2> ();
 
@@ -94,14 +122,14 @@ public class BlockMap : MonoBehaviour {
 			}
 			block = buf;
 			count++;
-			if(check >= blockCount)
+			if(check >= availableBlock[0,2])
 				break;
 		}
 		
 		return eachFloorBlocks;
 	}
 
-	bool[,] blockAccessible(List<bool[,]> allFloors, int y) {
+	bool[,] blockAccessible(List<bool[,]> allFloors, int y, int[,] availableBlock, int[] availableArea) {
 		bool[,] beforeFloorBlocks = allFloors[y-1];
 		bool[,] canFloorBlocks = new bool[(int)mapSize.x, (int)mapSize.z];
 		int reductionSize = (y>=(int)mapSize.x)? (int)mapSize.x-1 : y;
@@ -109,8 +137,8 @@ public class BlockMap : MonoBehaviour {
 		Queue<Coord2> queue;
 		int count = 0;
 
-		for (int xSize=reductionSize; xSize<mapSize.x; xSize++){
-			for (int zSize=0; zSize<mapSize.z; zSize++){
+		for (int xSize=0; xSize<mapSize.x; xSize++){
+			for (int zSize=reductionSize; zSize<mapSize.z; zSize++){
 				if(beforeFloorBlocks[xSize,zSize]){
 					for(int x=-1; x<=1; x++){
 						for(int z=-1; z<=1; z++){
@@ -128,7 +156,7 @@ public class BlockMap : MonoBehaviour {
 		}
 		if(list.Count > 0){
 			queue = new Queue<Coord2>(Utility.ShuffleArray(list.ToArray(), seed));
-			for(int i=0; i<blockCount; i++){
+			for(int i=0; i<availableBlock[y,2]; i++){
 				if(queue.Count == 0)
 					break;
 				Coord2 buf = queue.Dequeue();

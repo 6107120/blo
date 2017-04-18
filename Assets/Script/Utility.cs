@@ -34,4 +34,10 @@ public static class Utility {
 
 	return randomValue;
 	}
+		public static int randomNumber (int min, int max, int seed) {
+	System.Random prng = new System.Random(seed);
+	int randomValue = prng.Next(min, max);
+
+	return randomValue;
+	}
 }
