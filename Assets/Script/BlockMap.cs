@@ -4,17 +4,17 @@ using UnityEngine;
 
 public class BlockMap : MonoBehaviour {
 
-	// public Transform tilePrefab;
 	public Transform blockPrefab;
 	public Vector3 mapSize;
 	public Vector3 startBlock;
 	List<bool[,]> allFloors;
 	int[] proportionSize;
-	Queue<Coord> shuffledBlockCoords;
+	Queue<Coord2> shuffledBlockCoords;
 	public int seed = 10;
+	[RangeAttribute(0,50)]
 	public int blockCount = 10;
 
-	Coord startPoint;
+	Coord2 startPoint;
 
 	void Start () {
 		GenerateMap();
@@ -22,7 +22,7 @@ public class BlockMap : MonoBehaviour {
 
 	public void GenerateMap() {
 		allFloors = new List<bool[,]>();
-		startPoint = new Coord((int)startBlock.x, (int)startBlock.y, (int)startBlock.z);
+		startPoint = new Coord2((int)startBlock.x, (int)startBlock.z);
 
 		// int proportionSizeBlock = 3;
 		// proportionSize = new int[(int)mapSize.y];
@@ -62,16 +62,15 @@ public class BlockMap : MonoBehaviour {
 
 	bool[,] baseBlockAccessible() {
 		bool[,] eachFloorBlocks = new bool[(int)mapSize.x, (int)mapSize.z];
-		Queue<Coord> queue = new Queue<Coord> ();
-		List<Coord> list = new List<Coord> ();
-		queue.Enqueue(startPoint);
+		List<Coord2> list = new List<Coord2> ();
+
 		eachFloorBlocks[startPoint.x, startPoint.z] = true;
+		Coord2 block = startPoint;
 
 		int check = 1;
 		int count = 0;
 
-		while(count < eachFloorBlocks.GetLength(0) * eachFloorBlocks.GetLength(1)){
-			Coord block = queue.Dequeue();
+		for(int i=0; i<eachFloorBlocks.GetLength(0) * eachFloorBlocks.GetLength(1); i++){
 			for(int x=-1; x<=1; x++){
 				for(int z=-1; z<=1; z++){		
 					int neighbourX = block.x + x;
@@ -79,7 +78,7 @@ public class BlockMap : MonoBehaviour {
 					if(Mathf.Abs(x) != Mathf.Abs(z)){
 						if(neighbourX >= 0 && neighbourX < eachFloorBlocks.GetLength(0) && neighbourZ >= 0 && neighbourZ < eachFloorBlocks.GetLength(1)) {
 							if(!eachFloorBlocks[neighbourX, neighbourZ]) {
-								list.Add(new Coord(neighbourX, 0 ,neighbourZ));
+								list.Add(new Coord2(neighbourX, neighbourZ));
 							}
 						}
 					}
@@ -87,13 +86,13 @@ public class BlockMap : MonoBehaviour {
 			}
 			list.Add(block);
 			int randNum = Utility.randomNumber(list.Count, seed+count);
-			Coord buf = list[randNum];
+			Coord2 buf = list[randNum];
 			list.Clear();
 			if(!eachFloorBlocks[buf.x, buf.z]) {
 				eachFloorBlocks[buf.x, buf.z] = true;
 				check ++;
 			}
-			queue.Enqueue(buf);
+			block = buf;
 			count++;
 			if(check >= blockCount)
 				break;
@@ -106,8 +105,8 @@ public class BlockMap : MonoBehaviour {
 		bool[,] beforeFloorBlocks = allFloors[y-1];
 		bool[,] canFloorBlocks = new bool[(int)mapSize.x, (int)mapSize.z];
 		int reductionSize = (y>=(int)mapSize.x)? (int)mapSize.x-1 : y;
-		List<Coord> list = new List<Coord> ();
-		Queue<Coord> queue;
+		List<Coord2> list = new List<Coord2> ();
+		Queue<Coord2> queue;
 		int count = 0;
 
 		for (int xSize=reductionSize; xSize<mapSize.x; xSize++){
@@ -119,7 +118,7 @@ public class BlockMap : MonoBehaviour {
 							int neighbourZ = zSize + z;
 							if(Mathf.Abs(x) != Mathf.Abs(z) || (x==0 && z==0)){
 								if(neighbourX >= 0 && neighbourX < beforeFloorBlocks.GetLength(0) && neighbourZ >= 0 && neighbourZ < beforeFloorBlocks.GetLength(1)) {
-									list.Add(new Coord(neighbourX, 0, neighbourZ));
+									list.Add(new Coord2(neighbourX, neighbourZ));
 								}
 							}
 						}
@@ -127,11 +126,15 @@ public class BlockMap : MonoBehaviour {
 				}
 			}
 		}
-		queue = new Queue<Coord>(Utility.ShuffleArray(list.ToArray(), seed));
-		while(count < blockCount){
-			Coord buf = queue.Dequeue();
-			canFloorBlocks[buf.x, buf.z] = true;
-			count++;
+		if(list.Count > 0){
+			queue = new Queue<Coord2>(Utility.ShuffleArray(list.ToArray(), seed));
+			for(int i=0; i<blockCount; i++){
+				if(queue.Count == 0)
+					break;
+				Coord2 buf = queue.Dequeue();
+				canFloorBlocks[buf.x, buf.z] = true;
+				count++;
+			}
 		}
 		return canFloorBlocks;
 	}
@@ -140,17 +143,17 @@ public class BlockMap : MonoBehaviour {
 		return new Vector3(-mapSize.x/2 + 0.5f + x, y, -mapSize.z/2 + 0.5f + z);
 	}
 
-	public Coord GetRandomCoord() {
-		Coord randomCoord = shuffledBlockCoords.Dequeue ();
+	public Coord2 GetRandomCoord() {
+		Coord2 randomCoord = shuffledBlockCoords.Dequeue ();
 		shuffledBlockCoords.Enqueue(randomCoord);
 		return randomCoord;
 	}
-	public struct Coord {
+	public struct Coord3 {
 		public int x;
 		public int y;
 		public int z;
 
-		public Coord(int x, int y, int z) {
+		public Coord3(int x, int y, int z) {
 			this.x = x;
 			this.y = y;
 			this.z = z;
