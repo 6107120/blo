@@ -8,15 +8,10 @@ public class BlockMap : MonoBehaviour {
 	public Vector3 mapSize;
 	public Vector3 startBlock;
 	List<bool[,]> allFloors;
-	int[] proportionSize;
 	Queue<Coord2> shuffledBlockCoords;
 	public int seed = 10;
-	[RangeAttribute(0,50)]
-	public int blockCount = 10;
 	[RangeAttribute(0,1)]
 	public float blockPercent = 1;
-	
-
 	Coord2 startPoint;
 
 	void Start () {
@@ -43,7 +38,7 @@ public class BlockMap : MonoBehaviour {
 			int result = (int)mapSize.z / (i+1);
 			if(result == 0)
 				result = 1;
-			availableArea[availableArea.GetLength(0)-1 - i] = result;
+			availableArea[i] = result;
 		}
 		for(int i=0; i<availableBlock.GetLength(0); i++){
 			int minResult = (int)Mathf.Sqrt(mapSize.x * availableArea[i]);
@@ -56,11 +51,10 @@ public class BlockMap : MonoBehaviour {
 			availableBlock[i,1] = maxResult;
 		}
 		for(int i=0; i<availableBlock.GetLength(0); i++){
-			availableBlock[i,2] = Utility.randomNumber(availableBlock[i,0], availableBlock[i,1]);
-			print(availableBlock[i,0]);
-			print(availableBlock[i,1]);
+			availableBlock[i,2] = Utility.randomNumber(availableBlock[i,0], availableBlock[i,1], seed);
+			//print(i + " " + availableBlock[i,0] + " " + availableBlock[i,1] + " " + availableBlock[i,2]);
 		}
-
+		
 
 		//Inheritance
 		string holderName = "Generated Map";
@@ -132,20 +126,25 @@ public class BlockMap : MonoBehaviour {
 	bool[,] blockAccessible(List<bool[,]> allFloors, int y, int[,] availableBlock, int[] availableArea) {
 		bool[,] beforeFloorBlocks = allFloors[y-1];
 		bool[,] canFloorBlocks = new bool[(int)mapSize.x, (int)mapSize.z];
-		int reductionSize = (y>=(int)mapSize.x)? (int)mapSize.x-1 : y;
 		List<Coord2> list = new List<Coord2> ();
 		Queue<Coord2> queue;
 		int count = 0;
 
 		for (int xSize=0; xSize<mapSize.x; xSize++){
-			for (int zSize=reductionSize; zSize<mapSize.z; zSize++){
+			for (int zSize=availableArea[y]; zSize<mapSize.z; zSize++){
 				if(beforeFloorBlocks[xSize,zSize]){
 					for(int x=-1; x<=1; x++){
 						for(int z=-1; z<=1; z++){
 							int neighbourX = xSize + x;
 							int neighbourZ = zSize + z;
-							if(Mathf.Abs(x) != Mathf.Abs(z) || (x==0 && z==0)){
+							if(Mathf.Abs(x) != Mathf.Abs(z)){
+								if(neighbourX >= 0+availableArea[y] && neighbourX < beforeFloorBlocks.GetLength(0) && neighbourZ >= 0+availableArea[y] && neighbourZ < beforeFloorBlocks.GetLength(1)) {
+									list.Add(new Coord2(neighbourX, neighbourZ));
+								}
+							}
+							if(x==0 && z==0){
 								if(neighbourX >= 0 && neighbourX < beforeFloorBlocks.GetLength(0) && neighbourZ >= 0 && neighbourZ < beforeFloorBlocks.GetLength(1)) {
+									for(int i=0; i<2; i++)
 									list.Add(new Coord2(neighbourX, neighbourZ));
 								}
 							}
